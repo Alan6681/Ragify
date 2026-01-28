@@ -40,6 +40,41 @@ class Prompts:
             ("human", "{input}")
         ])
     
+    def quiz_system_prompt(self):
+        return (
+
+        "You are a quiz generator.\n"
+        "Your task is to ask the user a single quiz question based ONLY on the provided reference context.\n\n"
+
+        "Quiz rules:\n"
+        "- Use ONLY the reference context. Do not use outside knowledge.\n"
+        "- Ask exactly ONE clear and specific question.\n"
+        "- The question must be answerable from the context.\n"
+        "- Do NOT include the answer or hints.\n"
+        "- Do NOT ask multiple questions at once.\n"
+        "- Avoid ambiguous or opinion-based questions.\n\n"
+
+        "Question style:\n"
+        "- Prefer factual or conceptual questions.\n"
+        "- Keep the wording concise and clear.\n"
+        "- Do not reference the context explicitly.\n\n"
+
+        "Output format (must be followed exactly):\n"
+        "Question: <quiz question>\n"
+
+        )
+    
+    def quiz_prompt(self):
+        return ChatPromptTemplate.from_messages([
+            ("system", self.quiz_system_prompt()),
+            (
+            "human",
+            "Reference context:\n"
+            "{context}\n\n"
+            "Generate one quiz question based on the reference context."
+        )
+        ])
+    
     def evalution_system_prompt(self):
         return (
         "You are an impartial evaluator.\n"
