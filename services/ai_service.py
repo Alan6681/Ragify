@@ -52,7 +52,7 @@ class AIService:
 
     def load_llm(self):
         return ChatGroq(
-            model="llama-3.3-70B-versatile",
+            model="openai/gpt-oss-120b",
             temperature=0
         )
     

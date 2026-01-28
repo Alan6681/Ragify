@@ -75,7 +75,7 @@ class Prompts:
         )
         ])
     
-    def evalution_system_prompt(self):
+    def evaluation_system_prompt(self):
         return (
         "You are an impartial evaluator.\n"
         "Your task is to assess a user's answer based ONLY on the provided reference context.\n\n"
@@ -95,11 +95,36 @@ class Prompts:
     
     def evaluation_prompt(self):
         return ChatPromptTemplate.from_messages([
-            ("system", self.evalution_system_prompt()),
-            ("human", 
-              "Reference Context:\n{context}\n\n"
-              "Question:\n{question}\n\n"
-              "User Answer:\n{answer}")
+            ("system", self.evaluation_system_prompt()),
+            (
+                "human",
+                "Context: {context}\n\n"
+                "Question: {question}\n\n"
+                "Student's Answer: {answer}\n\n"
+                "Evaluate the answer and respond in this EXACT JSON format:\n"
+                "{{\"correct\": true/false, \"feedback\": \"your detailed feedback here\", \"score\": 0-100}}\n\n"
+                "Be strict but fair in your evaluation."
+            )
         ])
+    def multi_question_prompt(self, full_context, num_questions):
+        return  ChatPromptTemplate.from_messages([
+                ("system", 
+                "You are a quiz generator. Generate diverse, non-repetitive quiz questions "
+                "based on the provided context. Each question should focus on different "
+                "aspects or facts from the context."),
+                ("human",
+                f"Reference context:\n{full_context}\n\n"
+                f"Generate exactly {num_questions} DIFFERENT quiz questions based on this context.\n\n"
+                "Rules:\n"
+                "- Each question must be unique and focus on different information\n"
+                "- Questions should test different concepts/facts\n"
+                "- Vary the difficulty and question types\n"
+                "- Do NOT repeat or rephrase the same question\n\n"
+                "Format each question on a new line starting with 'Q#: ' like this:\n"
+                "Q1: [first question]\n"
+                "Q2: [second question]\n"
+                "Q3: [third question]\n")
+            ])
+            
 
-    
+        
