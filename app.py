@@ -58,7 +58,14 @@ if not "vectorstore" in st.session_state:
 if not "messages" in st.session_state:
     st.session_state["messages"] = [{"role":"assistant", "content": "Hello there ☺️, What are you curious about"}]
 
-st.title("Ragify ")
+st.title("Ragify 🦉")
+st.markdown("""
+<div style='text-align: left; color: #6B7280;'>
+    <p>Learn smarter with AI-powered study assistance</p>
+</div>
+""", unsafe_allow_html=True)
+st.markdown("<br/>", unsafe_allow_html=True)
+
 
 with st.sidebar:
     st.header("Upload File(s) 📁")
@@ -95,7 +102,6 @@ with st.sidebar:
 
         with col2:
             quiz_mode = st.button("Quiz Mode", type="secondary")
-        st.markdown("<br>", unsafe_allow_html=True)
         if quiz_mode:
             st.session_state.mode = "Quiz"
             st.session_state.quiz_mode = False
@@ -554,4 +560,5 @@ if uploaded_files:
         #         st.rerun()
 
 else:
-        st.info("👈Upload your PDF ")
+    st.info("👈Upload your PDF ")
+
