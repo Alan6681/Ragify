@@ -87,7 +87,7 @@ class RagChain:
         full_context = self.format_docs(docs)
         
         # Generate all questions
-        response = (self.prompts.multi_question_prompt(full_context=full_context, num_questions=num_questions) | self.llm).invoke({})
+        response = (self.prompts.multi_question_prompt() | self.llm).invoke({"full_context" : full_context, "num_questions" : num_questions})
         
         # Parse questions
         import re

@@ -74,6 +74,11 @@ with st.sidebar:
     if uploaded_files:
         current_file_names = [file.name for file in uploaded_files]
 
+        with st.expander("📚 Uploaded Files", expanded=True):
+            for i, file in enumerate(uploaded_files, 1):
+                file_size = len(file.getvalue()) / 1024
+                st.caption(f"{i}. {file.name} ({file_size:.1f} KB)")
+
         files_changed = (
             set(current_file_names) != set(st.session_state.uploaded_file_names)
         )
@@ -90,6 +95,9 @@ with st.sidebar:
             # Clear chat history when files change
             st.session_state.chat_history = []
             st.session_state.messages = [{"role":"assistant", "content": "Hello there ☺️, What are you curious about the new documents?"}]
+
+        else:
+            st.success(f"{len(uploaded_files)} document(s) ready")
 
         st.markdown("---")
         st.markdown("## Select Mode ⚙️")
@@ -137,10 +145,34 @@ with st.sidebar:
 if uploaded_files:
     if not "rag_chain" in st.session_state:
         with st.spinner("🔄️ Processing documents and creating knowledge base"):
-            st.session_state["rag_chain"] = RagChain(uploaded_files)
-        st.success("✅ Documents processed successfully!")
-        time.sleep(1)
-        st.rerun()
+            try:
+                st.session_state["rag_chain"] = RagChain(uploaded_files)
+                st.success("✅ Documents processed successfully!")
+                time.sleep(1)
+                st.rerun()
+
+            except Exception as e:
+                st.error(f"❌ Error: {str(e)}")
+
+                error_str = str(e).lower()
+                
+                if "easyocr" in error_str:
+                    st.code("pip install easyocr pdf2image pillow torch", language="bash")
+                    st.caption("Install the above packages for scanned PDF support")
+                    
+                elif "pdf2image" in error_str or "poppler" in error_str:
+                    st.info("""
+                    **System Requirements for Scanned PDFs:**
+                    - Windows: Install [poppler](https://github.com/oschwartz10612/poppler-windows/releases)
+                    - Mac: `brew install poppler`
+                    - Linux: `sudo apt-get install poppler-utils`
+                    """)
+                    
+                else:
+                    st.info("💡 Try: Re-upload the file or check if it's password-protected")
+
+                if "rag_chain" in st.session_state:
+                    del st.session_state["rag_chain"]
 
     if st.session_state.mode == "Chat":
         # Display chat history

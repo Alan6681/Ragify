@@ -8,3 +8,9 @@ langchain-text-splitters
 faiss-cpu
 pypdf
 sentence-transformers
+unstructured[all-docs]
+pypdfium2
+easyocr
+pymupdf
+pillow
+pytesseract
