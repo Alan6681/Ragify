@@ -1,4 +1,5 @@
 streamlit
+opencv-python-headless
 langchain_groq
 langchain_huggingface
 langchain-classic
@@ -14,4 +15,3 @@ easyocr
 pymupdf
 pillow
 pytesseract
-opencv-python-headless
