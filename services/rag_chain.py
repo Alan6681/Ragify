@@ -69,10 +69,8 @@ class RagChain:
     
     def quiz_generator(self, topic=None, num_questions=1):
         """
-        Generate multiple diverse quiz questions (iOS-compatible)
+        Generate multiple diverse quiz questions in one call.
         """
-        import random
-        
         # Retrieve documents
         if topic:
             docs = self.vectorstore.as_retriever(
@@ -86,36 +84,26 @@ class RagChain:
         else:
             docs = self.vectorstore.similarity_search("", k=min(20, num_questions * 3))
         
-        # Shuffle for variety
-        random.shuffle(docs)
+        full_context = self.format_docs(docs)
+        
+        # Generate all questions
+        response = (self.prompts.multi_question_prompt() | self.llm).invoke({"full_context" : full_context, "num_questions" : num_questions})
+        
+        # Parse questions
+        import re
+        questions_text = response.content
+        question_matches = re.findall(r'Q\d+:\s*(.+?)(?=Q\d+:|$)', questions_text, re.DOTALL)
         
         questions_and_contexts = []
-        docs_per_question = max(2, len(docs) // num_questions)
+        for question in question_matches[:num_questions]:
+            cleaned_question = question.strip()
+            if cleaned_question:
+                questions_and_contexts.append((cleaned_question, full_context))
         
-        # Generate questions one at a time (more reliable)
-        for i in range(num_questions):
-            start_idx = i * docs_per_question
-            end_idx = start_idx + docs_per_question
-            question_docs = docs[start_idx:end_idx]
-            
-            if not question_docs:
-                continue
-            
-            context = self.format_docs(question_docs)
-            
-            # Simple prompt without complex formatting
-            response = self.quiz_chain_runnable.invoke({
-                "context": context
-            })
-            
-            # Just extract the text directly (no regex parsing)
-            question_text = response.content.strip()
-            
-            # Remove "Question:" prefix if present
-            if question_text.lower().startswith("question:"):
-                question_text = question_text[9:].strip()
-            
-            questions_and_contexts.append((question_text, context))
+        # Only use fallback if something went wrong
+        if len(questions_and_contexts) < num_questions:
+            print(f"Warning: Only got {len(questions_and_contexts)} questions, expected {num_questions}. Using fallback.")
+            return self._fallback_quiz_generation(topic, num_questions, docs)
         
         return questions_and_contexts
 

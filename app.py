@@ -10,51 +10,6 @@ st.set_page_config(
     page_icon= "📕",
     layout="centered"
 )
-
-st.markdown("""
-    <style>
-    /* Better mobile sidebar */
-    @media (max-width: 768px) {
-        /* Make sidebar buttons larger and more touch-friendly */
-        .stButton > button {
-            height: auto;
-            padding: 0.75rem 1rem;
-            font-size: 1rem;
-        }
-        
-        /* Better spacing on mobile */
-        .block-container {
-            padding-top: 2rem;
-            padding-bottom: 2rem;
-            padding-left: 1rem;
-            padding-right: 1rem;
-        }
-        
-        /* Better metric display on mobile */
-        [data-testid="stMetricValue"] {
-            font-size: 1.5rem;
-        }
-        
-        /* Better expander on mobile */
-        .streamlit-expanderHeader {
-            font-size: 0.9rem;
-        }
-    }
-    
-    /* Improve button appearance */
-    .stButton > button {
-        width: 100%;
-        border-radius: 0.5rem;
-        transition: all 0.3s ease;
-    }
-    
-    .stButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-    </style>
-""", unsafe_allow_html=True)
-
 if not "uploaded_file_names" in st.session_state:
     st.session_state.uploaded_file_names = []
 
@@ -148,13 +103,13 @@ with st.sidebar:
         st.markdown("## Select Mode ⚙️")
         col1, col2 = st.columns(2)
         with col1:
-            chat_mode = st.button("Chat Mode", type="secondary", use_container_width=True)
+            chat_mode = st.button("Chat Mode", type="secondary")
         if chat_mode:
             st.session_state.mode = "Chat"
             st.session_state.quiz_mode = False
 
         with col2:
-            quiz_mode = st.button("Quiz Mode", type="secondary", use_container_width=True)
+            quiz_mode = st.button("Quiz Mode", type="secondary")
         if quiz_mode:
             st.session_state.mode = "Quiz"
             st.session_state.quiz_mode = False
@@ -171,7 +126,7 @@ with st.sidebar:
         col1, col2, col3 = st.columns([1,3,1])
 
         with col2:
-            evaluation = st.button("Evaluation 📈", use_container_width=True)
+            evaluation = st.button("Evaluation 📈")
             if evaluation:
                 st.session_state.mode = "Evaluation"
                 st.rerun()
@@ -179,7 +134,7 @@ with st.sidebar:
         st.markdown("---")
         col1, col2, col3 = st.columns([1,2,1])
         with col2:
-            clear_chat = st.button("Clear chat ❌", type="primary", use_container_width=True)
+            clear_chat = st.button("Clear chat ❌", type="primary")
             if clear_chat:
                 st.session_state.messages = [{"role":"assistant", "content": "Hello there ☺️, What are you curious about"}]
                 st.session_state.chat_history = []
@@ -425,16 +380,22 @@ if uploaded_files:
                         st.rerun()
 
     elif st.session_state.mode == "Evaluation":
-        st.write("## 📊 Performance Dashboard")
-        
-        if not st.session_state.quiz_answers:
-            st.info("📚 Complete a quiz to unlock your performance dashboard!")
-            if st.button("Start a Quiz 🚀"):
+        if st.session_state.quiz_complete == False:
+            st.info("Please complete a quiz first to view the performance dashboard.")
+            if st.button("← Back to Quiz"):
                 st.session_state.mode = "Quiz"
-                st.session_state.quiz_mode = False
                 st.rerun()
         else:
-            # Calculate statistics
+            st.write("## 📊 Performance Dashboard")
+    
+    # if not st.session_state.quiz_answers:
+    #     st.info("📚 Complete a quiz to unlock your performance dashboard!")
+    #     if st.button("Start a Quiz 🚀"):
+    #         st.session_state.mode = "Quiz"
+    #         st.session_state.quiz_mode = False
+    #         st.rerun()
+    # else:
+        # Calculate statistics
             total_questions = len(st.session_state.quiz_questions)
             answered_questions = len(st.session_state.quiz_answers)
             correct_answers = sum(st.session_state.quiz_scores)
@@ -444,49 +405,53 @@ if uploaded_files:
             total_time = sum(st.session_state.answer_times)
             
             # Tabs for different views
-            tab1, tab2, tab3 = st.tabs(["📈 Overview", "⚡ Speed", "📝 Review"])
+            tab1, tab2, tab3 = st.tabs(["📈 Overview", "⚡ Speed Analysis", "📝 Detailed Review"])
             
             with tab1:
-                # Key Metrics - Responsive grid
-                col1, col2 = st.columns(2)  # ✅ Changed from 4 to 2 columns
+                # Key Metrics
+                col1, col2, col3, col4 = st.columns(4)
                 with col1:
-                    st.metric("Accuracy", f"{accuracy:.1f}%")
-                    st.metric("Correct", correct_answers)
+                    st.metric("Accuracy", f"{accuracy:.1f}%", 
+                            delta=f"{correct_answers}/{answered_questions}")
                 with col2:
-                    st.metric("Incorrect", incorrect_answers)
+                    st.metric("Correct", correct_answers, 
+                            delta_color="normal")
+                with col3:
+                    st.metric("Incorrect", incorrect_answers,
+                            delta_color="inverse")
+                with col4:
                     st.metric("Avg Time", f"{avg_time:.1f}s")
                 
                 st.write("---")
                 
-                # Score Breakdown - Stack on mobile
-                st.write("### 🎯 Score Distribution")
-                import pandas as pd
-                
-                score_data = pd.DataFrame({
-                    'Result': ['Correct ✅', 'Incorrect ❌'],
-                    'Count': [correct_answers, incorrect_answers]
-                })
-                st.bar_chart(score_data.set_index('Result'))
-                
-                st.write("---")
-                
-                # Performance summary
-                st.write("### 📊 Summary")
+                # Score Breakdown Chart
                 col1, col2 = st.columns(2)
-                with col1:
-                    st.metric("Total Time", f"{total_time:.1f}s")
-                with col2:
-                    st.metric("Questions", f"{answered_questions}/{total_questions}")
                 
-                # Performance rating
-                if accuracy >= 90:
-                    st.success("🌟 Excellent Performance!")
-                elif accuracy >= 70:
-                    st.info("👍 Good Job!")
-                elif accuracy >= 50:
-                    st.warning("📚 Keep Practicing!")
-                else:
-                    st.error("💪 Need More Study!")
+                with col1:
+                    st.write("### 🎯 Score Distribution")
+                    # Create a simple bar chart for correct vs incorrect
+                    import pandas as pd
+                    
+                    score_data = pd.DataFrame({
+                        'Result': ['Correct ✅', 'Incorrect ❌'],
+                        'Count': [correct_answers, incorrect_answers]
+                    })
+                    st.bar_chart(score_data.set_index('Result'))
+                
+                with col2:
+                    st.write("### ⏱️ Total Time")
+                    st.metric("Total Quiz Time", f"{total_time:.1f}s")
+                    st.metric("Questions Answered", f"{answered_questions}/{total_questions}")
+                    
+                    # Performance rating
+                    if accuracy >= 90:
+                        st.success("🌟 Excellent Performance!")
+                    elif accuracy >= 70:
+                        st.info("👍 Good Job!")
+                    elif accuracy >= 50:
+                        st.warning("📚 Keep Practicing!")
+                    else:
+                        st.error("💪 Need More Study!")
             
             with tab2:
                 st.write("### ⚡ Response Speed Analysis")
@@ -496,7 +461,8 @@ if uploaded_files:
                 
                 time_data = pd.DataFrame({
                     'Question': [f'Q{i+1}' for i in range(len(st.session_state.answer_times))],
-                    'Time (seconds)': st.session_state.answer_times
+                    'Time (seconds)': st.session_state.answer_times,
+                    'Correct': ['✅' if score else '❌' for score in st.session_state.quiz_scores]
                 })
                 
                 st.write("#### 📊 Time per Question")
@@ -504,7 +470,7 @@ if uploaded_files:
                 
                 st.write("---")
                 
-                # Speed statistics - Responsive
+                # Speed statistics
                 col1, col2, col3 = st.columns(3)
                 with col1:
                     fastest = min(st.session_state.answer_times)
@@ -517,6 +483,12 @@ if uploaded_files:
                 
                 st.write("---")
                 
+                # Detailed table
+                st.write("#### 📋 Question-by-Question Breakdown")
+                display_data = time_data.copy()
+                display_data['Time (seconds)'] = display_data['Time (seconds)'].round(1)
+                st.dataframe(display_data, use_container_width=True, hide_index=True)
+                
                 # Speed insights
                 st.write("#### 💡 Speed Insights")
                 if avg_time < 10:
@@ -527,7 +499,7 @@ if uploaded_files:
                     st.warning("🤔 Take your time, but try to be more decisive.")
             
             with tab3:
-                # Detailed Q&A review - Mobile friendly
+                # Detailed Q&A review
                 st.write("### 📝 Question-by-Question Review")
                 
                 for idx, (q, a, e, score, time_taken) in enumerate(zip(
@@ -538,14 +510,10 @@ if uploaded_files:
                     st.session_state.answer_times
                 )):
                     status = "✅ Correct" if score else "❌ Incorrect"
-                    
-                    # Compact mobile-friendly expander
-                    with st.expander(f"Q{idx + 1}: {status} (⏱️ {time_taken:.1f}s)", expanded=False):
-                        st.markdown(f"**Question:**")
-                        st.write(q['question'])
+                    with st.expander(f"Question {idx + 1} - {status} (⏱️ {time_taken:.1f}s)", expanded=False):
+                        st.markdown(f"**Question:**  \n{q['question']}")
                         st.markdown("---")
-                        st.markdown(f"**Your Answer:**")
-                        st.write(a)
+                        st.markdown(f"**Your Answer:**  \n{a}")
                         st.markdown("---")
                         st.markdown("**Evaluation:**")
                         if score:
@@ -554,38 +522,36 @@ if uploaded_files:
                             st.error(e)
             
             st.write("---")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                if st.button("🔄 Retake Quiz"):
+                    st.session_state.mode = "Quiz"
+                    st.session_state.current_question_index = 0
+                    st.session_state.quiz_answers = []
+                    st.session_state.quiz_evaluations = []
+                    st.session_state.quiz_scores = []
+                    st.session_state.answer_times = []
+                    st.session_state.quiz_complete = False
+                    st.session_state.question_start_time = None
+                    st.rerun()
+            with col2:
+                if st.button("🆕 New Quiz"):
+                    st.session_state.mode = "Quiz"
+                    st.session_state.quiz_mode = False
+                    st.session_state.current_question_index = 0
+                    st.session_state.quiz_questions = []
+                    st.session_state.quiz_answers = []
+                    st.session_state.quiz_evaluations = []
+                    st.session_state.quiz_scores = []
+                    st.session_state.answer_times = []
+                    st.session_state.quiz_complete = False
+                    st.session_state.question_start_time = None
+                    st.rerun()
+            with col3:
+                if st.button("← Back to Chat"):
+                    st.session_state.mode = "Chat"
+                    st.rerun()
             
-            # Action buttons - Stack vertically on mobile
-            st.write("### Actions")
-            
-            # Use full width buttons for mobile
-            if st.button("🔄 Retake Quiz", use_container_width=True):  # ✅ Added
-                st.session_state.mode = "Quiz"
-                st.session_state.current_question_index = 0
-                st.session_state.quiz_answers = []
-                st.session_state.quiz_evaluations = []
-                st.session_state.quiz_scores = []
-                st.session_state.answer_times = []
-                st.session_state.quiz_complete = False
-                st.session_state.question_start_time = None
-                st.rerun()
-            
-            if st.button("🆕 New Quiz", use_container_width=True):  # ✅ Added
-                st.session_state.mode = "Quiz"
-                st.session_state.quiz_mode = False
-                st.session_state.current_question_index = 0
-                st.session_state.quiz_questions = []
-                st.session_state.quiz_answers = []
-                st.session_state.quiz_evaluations = []
-                st.session_state.quiz_scores = []
-                st.session_state.answer_times = []
-                st.session_state.quiz_complete = False
-                st.session_state.question_start_time = None
-                st.rerun()
-            
-            if st.button("← Back to Chat", use_container_width=True):  # ✅ Added
-                st.session_state.mode = "Chat"
-                st.rerun()
         # st.write("## 📊 Performance Analytics")
         
         # if not st.session_state.quiz_answers or not st.session_state.quiz_evaluations:
@@ -627,4 +593,3 @@ if uploaded_files:
 
 else:
     st.info("👈Upload your PDF ")
-
