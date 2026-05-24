@@ -1,3 +1,4 @@
+gradio
 streamlit
 opencv-python-headless
 langchain_groq
@@ -15,3 +16,4 @@ easyocr
 pymupdf
 pillow
 pytesseract
+libgl1-mesa-glx
