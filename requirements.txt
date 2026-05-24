@@ -16,4 +16,4 @@ easyocr
 pymupdf
 pillow
 pytesseract
-libgl1-mesa-glx
+
